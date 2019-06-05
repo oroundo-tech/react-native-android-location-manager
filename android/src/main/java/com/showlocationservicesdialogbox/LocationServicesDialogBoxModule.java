@@ -91,8 +91,8 @@ public class LocationServicesDialogBoxModule extends ReactContextBaseJavaModule 
 
         if (!isEnabled) {
             if (map.hasKey("noDialog") && map.getBoolean("noDialog")) {
-                result.putString("status", "disbled");
-                result.putBoolean("disabled", true);
+                result.putString("status", "disabled");
+                result.putBoolean("enabled", false);
 
                 promiseCallback.resolve(result);
             } else if (activityResult || map.hasKey("openLocationServices") && !map.getBoolean("openLocationServices")) {
