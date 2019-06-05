@@ -54,14 +54,6 @@ public class LocationServicesDialogBoxModule extends ReactContextBaseJavaModule 
     }
 
     @ReactMethod
-    public void isLocationEnabledPure(ReadableMap configMap, Promise promise) {
-        promiseCallback = promise;
-        map = configMap;
-        currentActivity = getCurrentActivity();
-        checkLocationServicePure(false);
-    }
-
-    @ReactMethod
     public void forceCloseDialog() {
         if (alertDialog != null && promiseCallback != null) {
             promiseCallback.reject(new Throwable("disabled"));
@@ -78,40 +70,6 @@ public class LocationServicesDialogBoxModule extends ReactContextBaseJavaModule 
                 providerReceiver = null;
             }
         } catch (Exception ignored) {
-        }
-    }
-
-     private void checkLocationServicePure(Boolean activityResult) {
-        if (currentActivity == null || map == null || promiseCallback == null) return;
-        LocationManager locationManager = (LocationManager) currentActivity.getSystemService(Context.LOCATION_SERVICE);
-        WritableMap result = Arguments.createMap();
-
-        Boolean isEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
-
-        if (map.hasKey("enableHighAccuracy") && map.getBoolean("enableHighAccuracy")) {
-            // High accuracy needed. Require NETWORK_PROVIDER.
-            isEnabled = isEnabled && locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
-        } else {
-            // Either highAccuracy is not a must which means any location will suffice
-            // or it is not specified which means again that any location will do.
-            isEnabled = isEnabled || locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
-        }
-
-        if (!isEnabled) {
-            result.putString("status", "disabled");
-            result.putBoolean("disabled", true);
-
-            promiseCallback.resolve(result);
-        } else {
-            if (map.hasKey("providerListener") && map.getBoolean("providerListener")) {
-                startListener();
-            }
-
-            result.putString("status", "enabled");
-            result.putBoolean("enabled", true);
-            result.putBoolean("alreadyEnabled", !activityResult);
-
-            promiseCallback.resolve(result);
         }
     }
 
@@ -132,7 +90,12 @@ public class LocationServicesDialogBoxModule extends ReactContextBaseJavaModule 
         }
 
         if (!isEnabled) {
-            if (activityResult || map.hasKey("openLocationServices") && !map.getBoolean("openLocationServices")) {
+            if (map.hasKey("noDialog") && map.getBoolean("noDialog")) {
+                result.putString("status", "disbled");
+                result.putBoolean("disabled", true);
+
+                promiseCallback.resolve(result);
+            } else if (activityResult || map.hasKey("openLocationServices") && !map.getBoolean("openLocationServices")) {
                 promiseCallback.reject(new Throwable("disabled"));
             } else if (!map.hasKey("showDialog") || map.getBoolean("showDialog")) {
                 displayPromptForEnablingGPS(currentActivity, map, promiseCallback);
